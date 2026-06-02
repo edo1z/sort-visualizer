@@ -1,10 +1,13 @@
 # sort-visualizer
 
+[![Live demo](https://img.shields.io/badge/live_demo-open-ff2d95?style=for-the-badge&logo=github)](https://edo1z.github.io/sort-visualizer/)
+&nbsp;[![License: MIT](https://img.shields.io/badge/license-MIT-00e5ff?style=for-the-badge)](LICENSE)
+&nbsp;[![No build](https://img.shields.io/badge/build-none-39ff14?style=for-the-badge)](#run-locally)
+
 Learn sorting algorithms **by running them in your browser**. Watch 15 sorts race with
 adjustable speed — or **write your own `sort()` and get it scored live**.
 
-**▶ Live demo (GitHub Pages):** https://edo1z.github.io/sort-visualizer/
-> Goes live once the repo is public and Pages is enabled. Locally, just open `index.html`.
+### ▶ [Open the live demo →](https://edo1z.github.io/sort-visualizer/)
 
 ![sort-visualizer](assets/quick.gif)
 
