@@ -1,0 +1,25 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: 全ソートが正しく並べ替えるか検証（Python/GIF用）
+        run: uv run pytest -v
+      - name: GIF と README を再生成（差分が出れば中身が変わった証拠）
+        run: uv run python generate.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Web版の全ソートが正しく並べ替えるか検証
+        run: node web/verify.js
+      - name: コードモードのお手本コードが正しく並べ替えるか検証
+        run: node web/verify-templates.js

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>sort-visualizer</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background:#0f1115; color:#e6e6e6; }
+  header { padding: 24px 20px; border-bottom:1px solid #2a2d35; }
+  h1 { margin:0 0 6px; } header p { margin:0; color:#9aa0ab; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:18px; padding:20px; }
+  .card { background:#171a21; border:1px solid #2a2d35; border-radius:12px; padding:16px; }
+  .card h2 { margin:0 0 10px; font-size:1.1rem; }
+  .card img { width:100%; border-radius:8px; background:#fafafc; }
+  .cat { color:#7aa2f7; font-size:.85rem; margin:8px 0 4px; }
+  .cx { color:#9aa0ab; font-size:.82rem; } .cx code { color:#e0af68; }
+  .note { color:#9aa0ab; font-size:.8rem; }
+  .when { font-size:.9rem; }
+  .pc { display:flex; gap:14px; font-size:.85rem; } .pc ul { margin:4px 0; padding-left:18px; }
+  code { background:#0f1115; padding:1px 5px; border-radius:4px; }
+</style></head><body>
+<header>
+  <h1>sort-visualizer</h1>
+  <p>ソートアルゴリズム図鑑 — 🟦通常 / 🟥注目中 / 🟩確定 ・ よく使われる順</p>
+</header>
+<div class="grid">
+    <section class="card">
+      <h2>1. Timsort（ティムソート）</h2>
+      <img src="assets/timsort.gif" alt="timsort" loading="lazy">
+      <p class="cat">ハイブリッド（実用標準）</p>
+      <p>挿入ソートとマージソートを組み合わせた実用ソートの決定版。データ中の既に整列した並び（run）を活かし、短い区間は挿入ソートで整え、最後にマージで統合する。Python の `sorted()` / `list.sort()`、Java のオブジェクト配列の標準ソートがこれ。</p><p class="note">※このリポの実装は骨子（挿入＋マージ）を可視化する簡略版。本物はさらに高度。</p>
+      <p class="cx">最良 <code>O(n)</code> / 平均 <code>O(n log n)</code>
+         / 最悪 <code>O(n log n)</code> / メモリ <code>O(n)</code>
+         / 安定 ✅ / in-place ❌</p>
+      <p class="when"><b>使いどころ:</b> 実務で何も考えず使うならこれ。現実のデータは部分的に整列していることが多く、その性質を最大限に活かして速くなる。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>現実データに非常に速い（部分整列で O(n) に近づく）</li><li>安定ソート</li><li>最悪でも O(n log n) を保証</li></ul></div>
+        <div><b>デメリット</b><ul><li>実装が複雑</li><li>追加メモリ O(n) が必要</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>2. クイックソート</h2>
+      <img src="assets/quick.gif" alt="quick" loading="lazy">
+      <p class="cat">比較・分割統治</p>
+      <p>ピボットを1つ選び、それより小さい群・大きい群に分割して再帰的に並べる分割統治法。定数倍が小さく実測が速いため、多くの言語の標準ソートの中核（C の qsort、C++ の introsort など）。</p>
+      <p class="cx">最良 <code>O(n log n)</code> / 平均 <code>O(n log n)</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(log n)</code>
+         / 安定 ❌ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 汎用の高速ソートが欲しく、安定性が不要でメモリを節約したいとき。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>平均 O(n log n) で定数倍が小さく実測が速い</li><li>追加メモリがほぼ不要（in-place）</li></ul></div>
+        <div><b>デメリット</b><ul><li>最悪 O(n²)（ピボット選択が悪いと劣化）</li><li>安定でない</li><li>再帰でスタックを使う</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>3. マージソート</h2>
+      <img src="assets/merge.gif" alt="merge" loading="lazy">
+      <p class="cat">比較・分割統治</p>
+      <p>配列を半分に分割し、それぞれを整列してから2つの整列済み列をマージする分割統治法。計算量が入力によらず安定して O(n log n)。</p>
+      <p class="cx">最良 <code>O(n log n)</code> / 平均 <code>O(n log n)</code>
+         / 最悪 <code>O(n log n)</code> / メモリ <code>O(n)</code>
+         / 安定 ✅ / in-place ❌</p>
+      <p class="when"><b>使いどころ:</b> 安定性が必要なとき、連結リスト、外部ソート（メモリに乗らない巨大データ）。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>最悪でも O(n log n) を保証</li><li>安定ソート</li><li>連結リストや外部ソートに向く</li></ul></div>
+        <div><b>デメリット</b><ul><li>追加メモリ O(n) が必要</li><li>配列の in-place 版は複雑</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>4. ヒープソート</h2>
+      <img src="assets/heap.gif" alt="heap" loading="lazy">
+      <p class="cat">比較・選択（ヒープ）</p>
+      <p>配列をヒープ（半順序の二分木）に組み、最大値を末尾へ取り出すことを繰り返す。優先度付きキューと同じ仕組み。</p>
+      <p class="cx">最良 <code>O(n log n)</code> / 平均 <code>O(n log n)</code>
+         / 最悪 <code>O(n log n)</code> / メモリ <code>O(1)</code>
+         / 安定 ❌ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 追加メモリを使わず最悪 O(n log n) を保証したいとき。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>最悪 O(n log n) を保証</li><li>in-place（追加メモリ O(1)）</li></ul></div>
+        <div><b>デメリット</b><ul><li>安定でない</li><li>キャッシュ効率が悪く実測はクイックに劣りがち</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>5. 挿入ソート</h2>
+      <img src="assets/insertion.gif" alt="insertion" loading="lazy">
+      <p class="cat">比較・素朴</p>
+      <p>各要素を、手前の整列済み部分の正しい位置に挿入していく。トランプを手札に並べるときの動き。</p>
+      <p class="cx">最良 <code>O(n)</code> / 平均 <code>O(n²)</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(1)</code>
+         / 安定 ✅ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 要素数が小さいとき、ほぼ整列済みのとき、高速ソートの小区間の土台として。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>小さい/ほぼ整列済みデータに非常に速い（最良 O(n)）</li><li>安定</li><li>in-place・実装が単純</li><li>オンライン（逐次到着するデータを処理できる）</li></ul></div>
+        <div><b>デメリット</b><ul><li>大きいランダムデータでは O(n²) で遅い</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>6. 計数ソート（counting sort）</h2>
+      <img src="assets/counting.gif" alt="counting" loading="lazy">
+      <p class="cat">非比較</p>
+      <p>各値の出現回数を数え、その累積から各要素の最終位置を決める非比較ソート。比較を一切しないので O(n log n) の壁を超えられる。</p>
+      <p class="cx">最良 <code>O(n+k)</code> / 平均 <code>O(n+k)</code>
+         / 最悪 <code>O(n+k)</code> / メモリ <code>O(n+k)</code>
+         / 安定 ✅ / in-place ❌</p>
+      <p class="when"><b>使いどころ:</b> キーが狭い範囲の整数（年齢・点数・バイト値など）。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>O(n+k) で比較ソートの限界より速い</li><li>安定</li></ul></div>
+        <div><b>デメリット</b><ul><li>値の範囲 k が大きいとメモリ・時間が破綻</li><li>整数など離散キー専用</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>7. 基数ソート（radix sort, LSD）</h2>
+      <img src="assets/radix.gif" alt="radix" loading="lazy">
+      <p class="cat">非比較</p>
+      <p>下位の桁から順に、桁ごとに安定ソート（計数ソート等）を繰り返す非比較ソート。d=桁数、b=基数。</p>
+      <p class="cx">最良 <code>O(d·(n+b))</code> / 平均 <code>O(d·(n+b))</code>
+         / 最悪 <code>O(d·(n+b))</code> / メモリ <code>O(n+b)</code>
+         / 安定 ✅ / in-place ❌</p>
+      <p class="when"><b>使いどころ:</b> 固定長の整数・文字列キー（ID、郵便番号、固定長文字列）。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>大量の整数キーに強い</li><li>安定</li></ul></div>
+        <div><b>デメリット</b><ul><li>桁数・基数に依存し汎用比較には使えない</li><li>追加メモリが必要</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>8. バケットソート</h2>
+      <img src="assets/bucket.gif" alt="bucket" loading="lazy">
+      <p class="cat">非比較</p>
+      <p>値の範囲をいくつかのバケツに分け、各バケツ内を別ソートで整列してから連結する。分布が一様なら各バケツが小さく済む。</p>
+      <p class="cx">最良 <code>O(n+k)</code> / 平均 <code>O(n+k)</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(n+k)</code>
+         / 安定 ✅ / in-place ❌</p>
+      <p class="when"><b>使いどころ:</b> データが範囲内に一様分布しているとき（乱数など）。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>一様分布なら平均 O(n+k)</li></ul></div>
+        <div><b>デメリット</b><ul><li>分布が偏ると最悪 O(n²)</li><li>追加メモリが必要</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>9. シェルソート</h2>
+      <img src="assets/shell.gif" alt="shell" loading="lazy">
+      <p class="cat">比較・挿入の強化</p>
+      <p>離れた間隔（gap）の要素同士で挿入ソートを行い、gap を縮めながら繰り返す挿入ソートの強化版。遠くの逆順を早く解消する。</p>
+      <p class="cx">最良 <code>O(n log n)</code> / 平均 <code>O(n^1.25) 前後</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(1)</code>
+         / 安定 ❌ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 実装が単純で追加メモリ無しでそこそこ速いものが欲しいとき（組み込みなど）。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>in-place</li><li>挿入ソートより大幅に速い</li><li>実装が比較的単純</li></ul></div>
+        <div><b>デメリット</b><ul><li>計算量が gap 列に依存し解析が難しい</li><li>安定でない</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>10. 選択ソート</h2>
+      <img src="assets/selection.gif" alt="selection" loading="lazy">
+      <p class="cat">比較・素朴</p>
+      <p>未整列部分から最小値を選んで先頭へ置くことを繰り返す。</p>
+      <p class="cx">最良 <code>O(n²)</code> / 平均 <code>O(n²)</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(1)</code>
+         / 安定 ❌ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 交換回数を最小にしたいとき（書き込みコストが高い媒体）。主に教育用。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>交換回数が O(n) と最小</li><li>in-place・実装が単純</li></ul></div>
+        <div><b>デメリット</b><ul><li>比較回数は常に O(n²)（データによらず遅い）</li><li>安定でない</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>11. バブルソート</h2>
+      <img src="assets/bubble.gif" alt="bubble" loading="lazy">
+      <p class="cat">比較・素朴</p>
+      <p>隣り合う要素を比較して逆順なら交換、を端から繰り返す。大きい値が泡のように浮かんでいく。</p>
+      <p class="cx">最良 <code>O(n)</code> / 平均 <code>O(n²)</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(1)</code>
+         / 安定 ✅ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> ほぼ教育専用。早期終了を入れればほぼ整列済みの検出に使える程度。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>実装が最も単純</li><li>安定</li><li>ほぼ整列済みなら早期終了で O(n)</li></ul></div>
+        <div><b>デメリット</b><ul><li>一般に O(n²) で実用では最も遅い部類</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>12. カクテルシェーカーソート</h2>
+      <img src="assets/cocktail.gif" alt="cocktail" loading="lazy">
+      <p class="cat">比較・バブル亜種</p>
+      <p>バブルソートを左右両方向に往復させる版。両端から整っていく。</p>
+      <p class="cx">最良 <code>O(n)</code> / 平均 <code>O(n²)</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(1)</code>
+         / 安定 ✅ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 教育用。バブルの小改良。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>バブルより速い場合がある</li><li>安定</li></ul></div>
+        <div><b>デメリット</b><ul><li>依然 O(n²)</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>13. コムソート</h2>
+      <img src="assets/comb.gif" alt="comb" loading="lazy">
+      <p class="cat">比較・バブル亜種</p>
+      <p>バブルソートの gap を大きく取り、徐々に縮める改良版。離れた逆順（turtle）を早く解消する。</p>
+      <p class="cx">最良 <code>O(n log n)</code> / 平均 <code>O(n² / 2^p)</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(1)</code>
+         / 安定 ❌ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 教育用。バブルの実用的な改良例。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>バブルより大幅に速い</li><li>in-place</li></ul></div>
+        <div><b>デメリット</b><ul><li>安定でない</li><li>クイック等には及ばない</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>14. ノームソート</h2>
+      <img src="assets/gnome.gif" alt="gnome" loading="lazy">
+      <p class="cat">比較・素朴</p>
+      <p>逆順を見つけたら1つ戻して入れ替える、挿入ソートに似た極めて単純なソート。</p>
+      <p class="cx">最良 <code>O(n)</code> / 平均 <code>O(n²)</code>
+         / 最悪 <code>O(n²)</code> / メモリ <code>O(1)</code>
+         / 安定 ✅ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 教育・ネタ寄り。実装の単純さの例。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>実装が極めて単純</li><li>in-place・安定</li></ul></div>
+        <div><b>デメリット</b><ul><li>O(n²) で遅い</li></ul></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>15. ボゴソート（bogosort）</h2>
+      <img src="assets/bogo.gif" alt="bogo" loading="lazy">
+      <p class="cat">ネタ</p>
+      <p>配列をランダムにシャッフルし、偶然整列するまで繰り返すジョークソート。</p>
+      <p class="cx">最良 <code>O(n)</code> / 平均 <code>O(n·n!)</code>
+         / 最悪 <code>∞（終わらない可能性）</code> / メモリ <code>O(1)</code>
+         / 安定 ❌ / in-place ✅</p>
+      <p class="when"><b>使いどころ:</b> 使わない（ネタ）。乱数と計算量の極端さを体感する教材。</p>
+      <div class="pc">
+        <div><b>メリット</b><ul><li>実装は一応単純</li></ul></div>
+        <div><b>デメリット</b><ul><li>平均 O(n·n!) と実用上ありえない遅さ</li><li>終わる保証がない</li></ul></div>
+      </div>
+    </section>
+</div></body></html>

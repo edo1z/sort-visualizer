@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sort-visualizer — watch sorts run, or write your own</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- CodeMirror (real code editor). Falls back to <textarea> if the CDN is unreachable. -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+  <style>
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-card: #0f1729;
+      --bg-input: #0b1226;
+      --neon-cyan: #00e5ff;
+      --neon-magenta: #ff2d95;
+      --neon-orange: #ff8a00;
+      --neon-green: #39ff14;
+      --text: #f0f0f0;
+      --text-dim: #8899aa;
+      --text-head: #ffffff;
+      --glow-cyan: 0 0 10px #00e5ff, 0 0 30px rgba(0, 229, 255, 0.3);
+      --glow-magenta: 0 0 10px #ff2d95, 0 0 30px rgba(255, 45, 149, 0.3);
+      --font-head: 'Orbitron', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --r-card: 12px;
+      --r-pill: 24px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); color: var(--text); line-height: 1.6;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(255,45,149,0.08), transparent 60%),
+        radial-gradient(1000px 500px at -10% 10%, rgba(0,229,255,0.10), transparent 55%),
+        var(--bg-primary);
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+    h1, h2, h3 { font-family: var(--font-head); color: var(--text-head); letter-spacing: 1.5px; line-height: 1.2; }
+    a { color: var(--neon-cyan); text-decoration: none; }
+    a:hover { color: var(--neon-magenta); }
+    code { font-family: var(--font-mono); color: var(--neon-orange); background: rgba(255,138,0,0.08); padding: 1px 6px; border-radius: 5px; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,229,255,0.5); }
+
+    header { padding: 26px 22px 18px; border-bottom: 1px solid rgba(0,229,255,0.15); }
+    header h1 { font-size: 1.5rem; text-transform: lowercase; }
+    header h1 .accent { color: var(--neon-cyan); text-shadow: var(--glow-cyan); }
+    header p { margin-top: 6px; color: var(--text-dim); font-size: .9rem; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 22px 60px; }
+
+    /* tabs */
+    .tabs { display: flex; gap: 10px; margin-bottom: 16px; }
+    .tab {
+      font-family: var(--font-head); font-size: .72rem; letter-spacing: 1.5px; text-transform: uppercase;
+      background: rgba(0,229,255,0.06); color: var(--text-dim);
+      border: 1.5px solid rgba(0,229,255,0.25); border-radius: var(--r-pill);
+      padding: 9px 22px; cursor: pointer; transition: all .25s ease;
+    }
+    .tab:hover { color: var(--text); border-color: var(--neon-cyan); }
+    .tab.on { color: var(--text-head); background: rgba(0,229,255,0.2); border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
+
+    /* panels */
+    .panel { background: var(--bg-card); border: 1px solid rgba(0,229,255,0.18); border-radius: var(--r-card); padding: 16px 18px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; }
+    .controls .group { display: flex; flex-direction: column; gap: 5px; }
+    .controls label { font-family: var(--font-head); font-size: .62rem; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
+    select {
+      font-family: var(--font-body); font-size: .85rem; background: var(--bg-input); color: var(--text);
+      border: 1px solid rgba(0,229,255,0.3); border-radius: 8px; padding: 8px 12px; cursor: pointer;
+    }
+    select:focus { outline: none; border-color: var(--neon-cyan); }
+
+    button.btn {
+      font-family: var(--font-head); font-size: .7rem; letter-spacing: 1.2px; text-transform: uppercase;
+      background: rgba(0,229,255,0.12); color: var(--text); border: 1.5px solid rgba(0,229,255,0.5);
+      border-radius: var(--r-pill); padding: 9px 18px; cursor: pointer; transition: all .25s ease; white-space: nowrap;
+    }
+    button.btn:hover { background: rgba(0,229,255,0.25); box-shadow: var(--glow-cyan); }
+    button.btn.primary { background: rgba(255,45,149,0.18); border-color: var(--neon-magenta); }
+    button.btn.primary:hover { background: rgba(255,45,149,0.32); box-shadow: var(--glow-magenta); }
+
+    input[type=range] { width: 170px; accent-color: var(--neon-cyan); }
+    .stat { font-family: var(--font-mono); font-size: .85rem; color: var(--text-dim); }
+    .stat b { color: var(--neon-cyan); }
+
+    canvas {
+      display: block; width: 100%; margin-top: 16px; border-radius: var(--r-card);
+      border: 1px solid rgba(0,229,255,0.18);
+      background: linear-gradient(180deg, #0b1226 0%, #0a0f1f 100%);
+    }
+    .legend { font-family: var(--font-mono); font-size: .76rem; color: var(--text-dim); margin-top: 10px; }
+    .sw { display: inline-block; width: 11px; height: 11px; border-radius: 2px; vertical-align: middle; margin: 0 5px 0 12px; }
+
+    /* info panel */
+    #info h2 { font-size: 1.05rem; margin-bottom: 6px; }
+    #info .cat { font-family: var(--font-head); font-size: .68rem; letter-spacing: 1px; text-transform: uppercase; color: var(--neon-cyan); margin-bottom: 10px; }
+    #info .note { color: var(--text-dim); font-size: .82rem; }
+    #info table { border-collapse: collapse; margin: 12px 0; font-size: .84rem; }
+    #info td { border: 1px solid rgba(0,229,255,0.15); padding: 5px 12px; }
+    #info td:nth-child(odd) { color: var(--text-dim); font-family: var(--font-head); font-size: .64rem; letter-spacing: .5px; text-transform: uppercase; }
+    #info .pc { display: flex; gap: 26px; flex-wrap: wrap; font-size: .88rem; margin-top: 6px; }
+    #info .pc b { font-family: var(--font-head); font-size: .66rem; letter-spacing: 1px; text-transform: uppercase; color: var(--neon-orange); }
+    #info ul { margin: 6px 0; padding-left: 18px; list-style: none; }
+    #info li::before { content: "▸ "; color: var(--neon-cyan); }
+
+    /* code mode */
+    #codePanel .hint { color: var(--text-dim); font-size: .82rem; margin-bottom: 10px; }
+    textarea#code { width: 100%; min-height: 260px; font-family: var(--font-mono); font-size: 13px; background: var(--bg-input); color: var(--text); border: 1px solid rgba(0,229,255,0.3); border-radius: 8px; padding: 10px; }
+    .CodeMirror { height: 300px; border: 1px solid rgba(0,229,255,0.25); border-radius: 8px; font-family: var(--font-mono); font-size: 13px; }
+    .runbar { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+    #runStatus { font-family: var(--font-mono); font-size: .82rem; color: var(--text-dim); }
+    #eval { margin-top: 14px; font-family: var(--font-mono); font-size: .86rem; line-height: 1.8; }
+    #eval .ok { color: var(--neon-green); }
+    #eval .ng { color: var(--neon-magenta); }
+    .hidden { display: none !important; }
+    .mt { margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>sort<span class="accent">·</span>visualizer</h1>
+    <p>Watch 15 sorting algorithms run — or write your own and get it scored, live in your browser.</p>
+  </header>
+
+  <div class="wrap">
+    <div class="tabs">
+      <button id="tabObserve" class="tab on">&#128065; Watch</button>
+      <button id="tabCode" class="tab">&#60;/&#62; Code</button>
+    </div>
+
+    <div class="controls panel">
+      <div class="group" id="builtinGroup">
+        <label for="algo" id="algoLabel">Algorithm</label>
+        <select id="algo"></select>
+      </div>
+      <div class="group">
+        <label>Controls</label>
+        <div style="display:flex; gap:8px;">
+          <button id="playBtn" class="btn primary">&#9654; Play</button>
+          <button id="stepBtn" class="btn">&#9197; Step</button>
+          <button id="shuffleBtn" class="btn">&#128256; Shuffle</button>
+        </div>
+      </div>
+      <div class="group">
+        <label for="speed">Speed: <span id="speedVal"></span></label>
+        <input type="range" id="speed" min="1" max="400" value="45">
+      </div>
+      <div class="group">
+        <label for="size">Array size: <span id="sizeVal"></span></label>
+        <input type="range" id="size" min="8" max="120" value="50">
+      </div>
+      <div class="group">
+        <label>Status</label>
+        <div class="stat"><span id="status">—</span> · cmp <b id="cmpCount">0</b> · swap/write <b id="swapCount">0</b></div>
+      </div>
+    </div>
+
+    <!-- code editor -->
+    <div id="codePanel" class="panel mt hidden">
+      <p class="hint">
+        Implement <code>sort(a, viz)</code>. Compare with <code>viz.gt(i,j)</code> / <code>viz.lt(i,j)</code>,
+        swap with <code>viz.swap(i,j)</code>, write with <code>viz.set(i,v)</code>, read with <code>viz.get(i)</code>.
+        Operations routed through <code>viz</code> light up the bars and are counted.
+      </p>
+      <textarea id="code"></textarea>
+      <div class="runbar">
+        <button id="runBtn" class="btn primary">&#9654; Run &amp; score</button>
+        <span id="runStatus"></span>
+      </div>
+      <div id="eval"></div>
+    </div>
+
+    <canvas id="cv"></canvas>
+    <div class="legend">
+      <span class="sw" style="background:#00e5ff"></span>idle
+      <span class="sw" style="background:#ffffff; box-shadow:0 0 6px #ff2d95"></span>active (compare / swap)
+      <span class="sw" style="background:#39ff14"></span>sorted
+    </div>
+
+    <div id="info" class="panel mt"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="web/meta.js"></script>
+  <script src="web/sorts.js"></script>
+  <script src="web/templates.js"></script>
+  <script src="web/app.js"></script>
+</body>
+</html>
